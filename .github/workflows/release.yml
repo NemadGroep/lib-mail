@@ -1,0 +1,29 @@
+name: release
+
+on:
+  push:
+    tags: ["v[0-9]+.[0-9]+.[0-9]+"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - run: pip install poetry
+      - run: poetry self add poetry-bumpversion
+      - run: |
+          VERSION=${GITHUB_REF:11}
+          echo version=$VERSION >> $GITHUB_ENV
+      - run: poetry version ${{ env.version }}
+      - run: poetry build
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*.whl
+            dist/*.tar.gz
