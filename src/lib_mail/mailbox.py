@@ -1,3 +1,4 @@
+import os
 import re
 import imaplib
 import chardet
@@ -9,12 +10,16 @@ from email.header import decode_header
 logger = logging.getLogger(__name__)
 
 class Mailbox:
-    def __init__(self, server: str , port: int, email: str, password: str, inbox: str = 'INBOX'):
-        self.inbox = inbox
+    def __init__(self, inbox: str = 'INBOX'):
+        self.inbox = os.getenv('IMAP_INBOX', inbox)
+        self.server = os.getenv('IMAP_SERVER')
+        self.port = int(os.getenv('IMAP'))
+        self.email = os.getenv('IMAP_EMAIL')
+        self.password = os.getenv('IMAP_PASSWORD')
         self.imap_server = None
         self.uid = None
-        self.connect_(server, port, email, password)
-    
+        self.connect_(self.server, self.port, self.email, self.password)
+
     def __del__(self):
         if self.imap_server:
             self.disconnect_()
