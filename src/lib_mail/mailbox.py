@@ -83,13 +83,16 @@ class Mailbox:
             uids: list[str],
             invoice_cls: Type[Invoice], 
             idoc_cls: Type[IDOC],
+            startseg_path: Path,
+            dynseg_path: Path,
+            endseg_path: Path
         ) -> Iterator[Tuple[Invoice, IDOC]]:
         """Yield (Invoice, IDOC) instances for each pdf in each new mail."""
         for uid in uids:
             message, adress, business, subject, text, pdfs = self.configure_uid_specific_data(uid)
             for pdf in pdfs:
                 invoice = invoice_cls(uid, adress, message, business, subject, text, pdf)
-                idoc = idoc_cls()
+                idoc = idoc_cls(startseg_path, dynseg_path, endseg_path)
                 yield invoice, idoc
 
     def should_process(self, crit_path: Path, invoice: Invoice) -> bool:
