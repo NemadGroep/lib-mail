@@ -3,6 +3,7 @@ import re
 import imaplib
 import chardet
 import logging
+from typing import Any
 from bs4 import BeautifulSoup
 from email import message_from_string
 from email.header import decode_header
@@ -13,7 +14,7 @@ class Mailbox:
     def __init__(self, inbox: str = 'INBOX'):
         self.inbox = os.getenv('IMAP_INBOX', inbox)
         self.server = os.getenv('IMAP_SERVER')
-        self.port = int(os.getenv('IMAP'))
+        self.port = os.getenv('IMAP_PORT')
         self.email = os.getenv('IMAP_EMAIL')
         self.password = os.getenv('IMAP_PASSWORD')
         self.imap_server = None
@@ -21,13 +22,13 @@ class Mailbox:
         self.connect_(self.server, self.port, self.email, self.password)
 
     def __del__(self):
-        if self.imap_server:
+        if hasattr(self, 'imap_server') and self.imap_server:
             self.disconnect_()
 
-    def connect_(self, server: str, port: int, email: str, password: str):
+    def connect_(self, server: str, port: str, email: str, password: str):
         """Connects to the email server."""
         try:
-            self.imap_server = imaplib.IMAP4_SSL(server, port)
+            self.imap_server = imaplib.IMAP4_SSL(server, int(port))
             self.imap_server.login(email, password)
             self.imap_server.select(self.inbox)
         except Exception as e:
@@ -145,7 +146,7 @@ class Mailbox:
         except Exception as e:
             logger.error(f"Error extracting plain text: {e}")
 
-    def configure_uid_specific_data(self, uid: str) -> tuple[str, str, str, str, str, list[bytes]] | tuple[None, None, None, None, None, list[bytes]]:
+    def configure_uid_specific_data(self, uid: str) -> Any:
         """Fetches the email content."""
         try:
             _, data = self.imap_server.uid('fetch', uid, '(RFC822)')
