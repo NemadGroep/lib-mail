@@ -3,10 +3,14 @@ import re
 import imaplib
 import chardet
 import logging
-from typing import Any
+from pathlib import Path
 from bs4 import BeautifulSoup
+from lib_invoice import Invoice
+from lib_utilys import read_json
+from lib_idoc.invoice import IDOC
 from email import message_from_string
 from email.header import decode_header
+from typing import Any, Type, Iterator, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -19,13 +23,13 @@ class Mailbox:
         self.password = os.getenv('IMAP_PASSWORD')
         self.imap_server = None
         self.uid = None
-        self.connect_(self.server, self.port, self.email, self.password)
+        self._connect(self.server, self.port, self.email, self.password)
 
     def __del__(self):
         if hasattr(self, 'imap_server') and self.imap_server:
-            self.disconnect_()
+            self._disconnect()
 
-    def connect_(self, server: str, port: str, email: str, password: str):
+    def _connect(self, server: str, port: str, email: str, password: str):
         """Connects to the email server."""
         try:
             self.imap_server = imaplib.IMAP4_SSL(server, int(port))
@@ -34,7 +38,7 @@ class Mailbox:
         except Exception as e:
             logger.exception("Error connecting to email server")
 
-    def disconnect_(self):
+    def _disconnect(self):
         """Disconnects from the email server."""
         self.imap_server.logout()
 
@@ -50,7 +54,7 @@ class Mailbox:
         except Exception as e:
             logger.exception("Error initializing UID")
 
-    def print_inboxes(self):
+    def list_inboxes(self):
         """Lists all available mailboxes (folders)."""
         try:
             status, mailboxes = self.imap_server.list()
@@ -73,6 +77,25 @@ class Mailbox:
             return uids
         except Exception as e:
             logger.exception("Error listing UIDs")
+
+    def create_invoice_and_idoc(
+            self, 
+            uids: list[str],
+            invoice_cls: Type[Invoice], 
+            idoc_cls: Type[IDOC],
+        ) -> Iterator[Tuple[Invoice, IDOC]]:
+        """Yield (Invoice, IDOC) instances for each pdf in each new mail."""
+        for uid in uids:
+            message, adress, business, subject, text, pdfs = self.configure_uid_specific_data(uid)
+            for pdf in pdfs:
+                invoice = invoice_cls(uid, adress, message, business, subject, text, pdf)
+                idoc = idoc_cls()
+                yield invoice, idoc
+
+    def should_process(self, crit_path: Path, invoice: Invoice) -> bool:
+        """Determines whether an email should be processed"""
+        criteria = read_json(crit_path)
+        return invoice.business in criteria and re.search(criteria[invoice.business], invoice.subject)
 
     def delete_email(self, uid: str):
         """Deletes an email from the inbox."""
