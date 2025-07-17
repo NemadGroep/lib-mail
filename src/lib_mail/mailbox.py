@@ -1,5 +1,6 @@
 import os
 import re
+import redis
 import imaplib
 import chardet
 import logging
@@ -115,10 +116,9 @@ class Mailbox:
         except Exception as e:
             logger.exception("Error flagging email")
 
-    def extract_minimal_metadata(self, uids: list[str]) -> list[tuple[str, str, str]]:
+    def set_metadata_redis(self, rclient: redis.Redis, uids: list[str]):
         """Fetches the minimal metadata of an email."""
         try:
-            metadata = []
             for uid in uids:
                 _, data = self.imap_server.uid('fetch', uid, '(RFC822)')
                 charset = chardet.detect(data[0][1])['encoding']
@@ -131,13 +131,14 @@ class Mailbox:
                 fragment.decode(charset or 'utf-8') if isinstance(fragment, bytes) else fragment
                 for fragment, charset in decoded_fragments
                 ])
-                metadata.append((uid, business, subject))
-                
-            return metadata
+                key = f"{uid}"
+                rclient.hset(key, mapping={
+                    'business': business,
+                    'subject': subject,
+                })
         except Exception as e:
             logger.error(f"Error extracting minimal metadata: {e}")
-            return []
-
+            
     def extract_business_(self, email_adress: str) -> str | None:
         """Extracts the business name from an email address."""
         match = re.search(r'[\w\.-]+@[\w\.-]+', email_adress)
