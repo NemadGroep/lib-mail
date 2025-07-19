@@ -4,6 +4,7 @@ import redis
 import imaplib
 import chardet
 import logging
+import requests
 from pathlib import Path
 from bs4 import BeautifulSoup
 from lib_invoice import Invoice
@@ -43,12 +44,12 @@ class Mailbox:
         """Disconnects from the email server."""
         self.imap_server.logout()
 
-    def initialize_uid(self, slider_value: int):
+    def initialize_uid(self, uid_value: int):
         """Initializes the UID of the last email."""
         try:
             _, uids = self.imap_server.uid('search', None, 'ALL')
             if uids[0]:
-                self.uid = max(int(uid.decode('utf-8')) for uid in uids[0].split()) - 1 - slider_value
+                self.uid = max(int(uid.decode('utf-8')) for uid in uids[0].split()) - 1 - uid_value
                 logger.info("Initialized UID: %s", self.uid)
             else:
                 logger.info("No emails found.")
