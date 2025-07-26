@@ -92,6 +92,9 @@ class Mailbox:
         """Yield (Invoice, IDOC) instances for each pdf in each new mail."""
         for uid in uids:
             message, adress, business, subject, text, pdfs = self.configure_uid_specific_data(uid)
+            if not pdfs:
+                logger.debug(f"No PDFs found in email with UID: {uid}")
+                continue
             for pdf in pdfs:
                 invoice = invoice_cls(uid, adress, message, business, subject, text, pdf)
                 idoc = idoc_cls(startseg_path, dynseg_path, endseg_path)
