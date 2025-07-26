@@ -93,7 +93,7 @@ class Mailbox:
         for uid in uids:
             message, adress, business, subject, text, pdfs = self.configure_uid_specific_data(uid)
             if not pdfs:
-                invoice = invoice_cls(uid, adress, message, business, subject, text, pdf)
+                invoice = invoice_cls(uid, adress, message, business, subject, text, None)
                 idoc = idoc_cls(startseg_path, dynseg_path, endseg_path)
                 yield invoice, idoc
             else:
