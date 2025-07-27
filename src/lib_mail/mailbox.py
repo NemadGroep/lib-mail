@@ -49,7 +49,7 @@ class Mailbox:
         try:
             _, uids = self.imap_server.uid('search', None, 'ALL')
             if uids[0]:
-                self.uid = max(int(uid.decode('utf-8')) for uid in uids[0].split()) - 1 - uid_value
+                self.uid = max(int(uid.decode('utf-8')) for uid in uids[0].split()) - uid_value
                 logger.info("Initialized UID: %s", self.uid)
             else:
                 logger.info("No emails found.")
