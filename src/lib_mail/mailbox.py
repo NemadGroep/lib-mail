@@ -42,7 +42,10 @@ class Mailbox:
 
     def _disconnect(self):
         """Disconnects from the email server."""
-        self.imap_server.logout()
+        try:
+            self.imap_server.logout()
+        except Exception as e:
+            logger.exception("Error disconnecting from email server")
 
     def initialize_uid(self, uid_value: int):
         """Initializes the UID of the last email."""
