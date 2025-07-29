@@ -27,10 +27,6 @@ class Mailbox:
         self.uid = None
         self._connect(self.server, self.port, self.email, self.password)
 
-    def __del__(self):
-        if hasattr(self, 'imap_server') and self.imap_server:
-            self._disconnect()
-
     def _connect(self, server: str, port: str, email: str, password: str):
         """Connects to the email server."""
         try:
@@ -39,13 +35,15 @@ class Mailbox:
             self.imap_server.select(self.inbox)
         except Exception as e:
             logger.exception("Error connecting to email server")
-
-    def _disconnect(self):
-        """Disconnects from the email server."""
-        try:
+    
+    def close(self):
+        """Closes the connection to the email server."""
+        if self.imap_server:
+            self.imap_server.close()
             self.imap_server.logout()
-        except Exception as e:
-            logger.exception("Error disconnecting from email server")
+            logger.info("Connection to email server closed.")
+        else:
+            logger.warning("No connection to close.")
 
     def initialize_uid(self, uid_value: int):
         """Initializes the UID of the last email."""
