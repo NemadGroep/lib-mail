@@ -107,14 +107,19 @@ class Mailbox:
         criteria = read_json(crit_path)
         return invoice.business in criteria and re.search(criteria[invoice.business], invoice.subject)
 
-    def delete_email(self, uid: str):
-        """Deletes an email from the inbox."""
+    def flag_as_deleted(self, uid: str):
         try:
             self.imap_server.uid('STORE', uid , '+FLAGS', '(\Deleted)')
+        except Exception as e:
+            logger.exception("Error flagging email as deleted")
+    
+    def expunge_mailbox(self):
+        """Expunges the mailbox to permanently delete flagged emails."""
+        try:
             self.imap_server.expunge()
         except Exception as e:
-            logger.exception("Error deleting email")
-            
+            logger.exception("Error expunging mailbox")
+
     def flag_email(self, uid: str):
         """Flags an email in the inbox."""
         try:
