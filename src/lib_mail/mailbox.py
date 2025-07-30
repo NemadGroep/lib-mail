@@ -12,6 +12,7 @@ from lib_utilys import read_json
 from lib_idoc.invoice import IDOC
 from email import message_from_string
 from email.header import decode_header
+from lib_ordrsp import OrderRsp, Order
 from typing import Any, Type, Iterator, Tuple
 
 logger = logging.getLogger(__name__)
@@ -102,6 +103,25 @@ class Mailbox:
                     invoice = invoice_cls(uid, adress, message, business, subject, text, pdf)
                     idoc = idoc_cls(startseg_path, dynseg_path, endseg_path)
                     yield invoice, idoc
+        
+    def create_order_and_response(
+            self, 
+            uids: list[str],
+            ordrsp_cls: Type[OrderRsp],
+            order_cls: Type[Order]
+        ) -> Iterator[Tuple[OrderRsp, Order]]:
+        """Yield (OrderRsp, Order) instances for each pdf in each new mail."""
+        for uid in uids:
+            message, adress, business, subject, text, pdfs = self.configure_uid_specific_data(uid)
+            if not pdfs:
+                order_rsp = ordrsp_cls(uid, adress, message, business, subject, text, None)
+                order = order_cls()
+                yield order_rsp, order
+            else:
+                for pdf in pdfs:
+                    order_rsp = ordrsp_cls(uid, adress, message, business, subject, text, pdf)
+                    order = order_cls()
+                    yield order_rsp, order
 
     def should_process(self, crit_path: Path, invoice: Invoice) -> bool:
         """Determines whether an email should be processed"""
@@ -205,4 +225,4 @@ class Mailbox:
             return message, adress, business, subject, text, pdfs
         except Exception as e:
             logger.exception("Error configuring UID specific data")
-            return None, None, None, None, None, []
+            return None, None, None, None, None, []l

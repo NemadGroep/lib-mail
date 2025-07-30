@@ -49,6 +49,18 @@ files = [
 ]
 
 [[package]]
+name = "lib-ordrsp"
+version = "0.0.2"
+description = ""
+optional = false
+python-versions = ">=3.10"
+groups = ["main"]
+files = [
+    {file = "lib_ordrsp-0.0.2-py3-none-any.whl", hash = "sha256:a008a473251467c16f980eb3e901d1f7b473750c7ca3dd647a5324de98bab6af"},
+    {file = "lib_ordrsp-0.0.2.tar.gz", hash = "sha256:3db3723f48f1fef4b5e7cfce6180afdac5cf9dc304b78eaf69f19de3942aa8a3"},
+]
+
+[[package]]
 name = "redis"
 version = "6.2.0"
 description = "Python client for Redis database and key-value store"
@@ -95,4 +107,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10"
-content-hash = "d6996dda7754c06a491e4debfbcfd3564c340e6c49bfbc3ccf19e61606d17b89"
+content-hash = "cd84aa8ad09e85954c3a787b4173c4c1ba10d799b273e789891cec90ca5e2924"
