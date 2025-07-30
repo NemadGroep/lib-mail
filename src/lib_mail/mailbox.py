@@ -114,19 +114,19 @@ class Mailbox:
         for uid in uids:
             message, adress, business, subject, text, pdfs = self.configure_uid_specific_data(uid)
             if not pdfs:
-                order_rsp = ordrsp_cls(uid, adress, message, business, subject, text, None)
+                ordrsp = ordrsp_cls(uid, adress, message, business, subject, text, None)
                 order = order_cls()
-                yield order_rsp, order
+                yield ordrsp, order
             else:
                 for pdf in pdfs:
-                    order_rsp = ordrsp_cls(uid, adress, message, business, subject, text, pdf)
+                    ordrsp = ordrsp_cls(uid, adress, message, business, subject, text, pdf)
                     order = order_cls()
-                    yield order_rsp, order
+                    yield ordrsp, order
 
-    def should_process(self, crit_path: Path, invoice: Invoice) -> bool:
+    def should_process(self, crit_path: Path, document: Invoice | OrderRsp) -> bool:
         """Determines whether an email should be processed"""
         criteria = read_json(crit_path)
-        return invoice.business in criteria and re.search(criteria[invoice.business], invoice.subject)
+        return document.business in criteria and re.search(criteria[document.business], document.subject)
 
     def flag_as_deleted(self, uid: str):
         try:
@@ -225,4 +225,4 @@ class Mailbox:
             return message, adress, business, subject, text, pdfs
         except Exception as e:
             logger.exception("Error configuring UID specific data")
-            return None, None, None, None, None, []l
+            return None, None, None, None, None, []
