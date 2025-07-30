@@ -12,7 +12,6 @@ from lib_utilys import read_json
 from lib_idoc.invoice import IDOC
 from email import message_from_string
 from email.header import decode_header
-from lib_ordrsp import OrderRsp, Order
 from typing import Any, Type, Iterator, Tuple
 
 logger = logging.getLogger(__name__)
@@ -107,9 +106,9 @@ class Mailbox:
     def create_order_and_response(
             self, 
             uids: list[str],
-            ordrsp_cls: Type[OrderRsp],
-            order_cls: Type[Order]
-        ) -> Iterator[Tuple[OrderRsp, Order]]:
+            ordrsp_cls,
+            order_cls,
+        ) -> Iterator[Tuple]:
         """Yield (OrderRsp, Order) instances for each pdf in each new mail."""
         for uid in uids:
             message, adress, business, subject, text, pdfs = self.configure_uid_specific_data(uid)
@@ -123,7 +122,7 @@ class Mailbox:
                     order = order_cls()
                     yield ordrsp, order
 
-    def should_process(self, crit_path: Path, document: Invoice | OrderRsp) -> bool:
+    def should_process(self, crit_path: Path, document) -> bool:
         """Determines whether an email should be processed"""
         criteria = read_json(crit_path)
         return document.business in criteria and re.search(criteria[document.business], document.subject)

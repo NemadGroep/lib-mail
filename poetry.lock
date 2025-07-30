@@ -49,33 +49,6 @@ files = [
 ]
 
 [[package]]
-name = "lib-ordrsp"
-version = "0.0.3"
-description = ""
-optional = false
-python-versions = ">=3.10"
-groups = ["main"]
-files = [
-    {file = "lib_ordrsp-0.0.3-py3-none-any.whl", hash = "sha256:499351ea0de43e222885de7a3a343f5abd17c83bf8707e09a2e40e89a48e5fa4"},
-    {file = "lib_ordrsp-0.0.3.tar.gz", hash = "sha256:ecc08598f4d919df761c3b4df7e5cfd72997081d59536a9cddf8bef6a573860c"},
-]
-
-[package.dependencies]
-lib-sap = ">=0.0.6,<0.0.7"
-
-[[package]]
-name = "lib-sap"
-version = "0.0.6"
-description = ""
-optional = false
-python-versions = ">=3.10"
-groups = ["main"]
-files = [
-    {file = "lib_sap-0.0.6-py3-none-any.whl", hash = "sha256:dba54d7d6a681631ed2bf4def020ce39cba897d76e5c7274a4395e900d84d517"},
-    {file = "lib_sap-0.0.6.tar.gz", hash = "sha256:dd72e85b0baae053c50cf85dd466cb22f189b37e1b7aa4dbb355130e1be90cac"},
-]
-
-[[package]]
 name = "redis"
 version = "6.2.0"
 description = "Python client for Redis database and key-value store"
@@ -122,4 +95,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10"
-content-hash = "e56ba8069532907e95bb3799df53c51ec4c1b414239907810a74f5e58e62e5c8"
+content-hash = "d6996dda7754c06a491e4debfbcfd3564c340e6c49bfbc3ccf19e61606d17b89"
