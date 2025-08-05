@@ -5,12 +5,14 @@ import imaplib
 import chardet
 import logging
 import requests
+import exchangelib
 from pathlib import Path
 from bs4 import BeautifulSoup
 from lib_invoice import Invoice
 from lib_utilys import read_json
 from lib_idoc.invoice import IDOC
 from email import message_from_string
+from email.parser import Parser
 from email.header import decode_header
 from typing import Any, Type, Iterator, Tuple
 
@@ -21,18 +23,24 @@ class Mailbox:
         self.inbox = os.getenv('IMAP_INBOX', inbox)
         self.server = os.getenv('IMAP_SERVER')
         self.port = os.getenv('IMAP_PORT')
-        self.email = os.getenv('IMAP_EMAIL')
-        self.password = os.getenv('IMAP_PASSWORD')
+        self.username = os.getenv('USERNAME')
+        self.password = os.getenv('PASSWORD')
+        self.email = os.getenv('EMAIL')
         self.imap_server = None
+        self.creds = None
+        self.acc = None
         self.uid = None
-        self._connect(self.server, self.port, self.email, self.password)
+        self.id = None
+        self._connect(self.server, self.port, self.username, self.password, self.email)
 
-    def _connect(self, server: str, port: str, email: str, password: str):
+    def _connect(self, server: str, port: str, username: str, password: str, email: str):
         """Connects to the email server."""
         try:
             self.imap_server = imaplib.IMAP4_SSL(server, int(port))
-            self.imap_server.login(email, password)
+            self.imap_server.login(username, password)
             self.imap_server.select(self.inbox)
+            self.creds = exchangelib.Credentials(username, password)
+            self.acc = exchangelib.Account(email, credentials=self.creds, autodiscover=True, access_type=exchangelib.DELEGATE)
         except Exception as e:
             logger.exception("Error connecting to email server")
     
@@ -225,3 +233,49 @@ class Mailbox:
         except Exception as e:
             logger.exception("Error configuring UID specific data")
             return None, None, None, None, None, []
+    
+    def assign_email(self, uid: int, person: str = 'AUTO'):
+        """Assigns an email to a specific person."""
+        id = self._get_id_from_uid(str(uid))
+        exch_msg = self.acc.inbox.get(id=id)
+        exch_msg.categories = [person]
+        exch_msg.save()
+
+    def _get_id_from_uid(self, uid: str) -> str:
+        """Extract the Exchange ID from the IMAP UID."""
+        typ, data = self.imap_server.uid('fetch', uid, '(BODY.PEEK[HEADER.FIELDS (MESSAGE-ID)])')
+        charset = chardet.detect(data[0][1])['encoding']
+        raw_data= data[0][1].decode(charset)
+        parser = Parser()
+        message = parser.parsestr(raw_data)
+        message_id = message.get('Message-ID')
+        exch_msg = self.acc.inbox.get(message_id=message_id)
+        return exch_msg.id
+
+if __name__ == "__main__":
+    from exchangelib.folders import Folder, SingleFolderQuerySet
+    from exchangelib.properties import DistinguishedFolderId, Mailbox as EwsMailbox
+    from exchangelib import Account, Credentials, DELEGATE
+
+    creds = Credentials(
+        username=os.getenv('USERNAME'),
+        password=os.getenv('PASSWORD'),
+    )
+
+    # Your personal mailbox
+    me = Account(
+        primary_smtp_address=os.getenv('EMAIL'),
+        credentials=creds,
+        autodiscover=True,
+        access_type=DELEGATE,
+    )
+
+    # The shared mailbox (same creds, just a different SMTP)
+    shared = Account(
+        primary_smtp_address='inkoop@nemad.com',
+        credentials=creds,
+        autodiscover=True,
+        access_type=DELEGATE,
+    )
+
+    print(shared.root.tree())
