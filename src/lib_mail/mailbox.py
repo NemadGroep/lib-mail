@@ -251,31 +251,3 @@ class Mailbox:
         message_id = message.get('Message-ID')
         exch_msg = self.acc.inbox.get(message_id=message_id)
         return exch_msg.id
-
-if __name__ == "__main__":
-    from exchangelib.folders import Folder, SingleFolderQuerySet
-    from exchangelib.properties import DistinguishedFolderId, Mailbox as EwsMailbox
-    from exchangelib import Account, Credentials, DELEGATE
-
-    creds = Credentials(
-        username=os.getenv('USERNAME'),
-        password=os.getenv('PASSWORD'),
-    )
-
-    # Your personal mailbox
-    me = Account(
-        primary_smtp_address=os.getenv('EMAIL'),
-        credentials=creds,
-        autodiscover=True,
-        access_type=DELEGATE,
-    )
-
-    # The shared mailbox (same creds, just a different SMTP)
-    shared = Account(
-        primary_smtp_address='inkoop@nemad.com',
-        credentials=creds,
-        autodiscover=True,
-        access_type=DELEGATE,
-    )
-
-    print(shared.root.tree())
